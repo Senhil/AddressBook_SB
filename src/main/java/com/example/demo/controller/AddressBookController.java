@@ -1,67 +1,66 @@
 package com.example.demo.controller;
 
-
 import com.example.demo.dto.AddressBookDTO;
 import com.example.demo.dto.ResponseDTO;
+import com.example.demo.exception.AddressBookException;
 import com.example.demo.model.AddressBook;
-import com.example.demo.service.AddressBookService;
+import com.example.demo.service.IAddressBookService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import javax.validation.Valid;
 import java.util.List;
 
-//Created controller class to make api calls
 @RestController
 @RequestMapping("/addressbook")
+
+// create a class name as EmployeePayrollController
 public class AddressBookController {
 
-
     @Autowired
-    AddressBookService service;
+    IAddressBookService service;
 
-
-    @GetMapping("")
-    public String getMessage() {
-        return "Welcome to Addressbook App";
+    @GetMapping("/welcome")
+    public ResponseEntity<String> getWelcome() {
+        String welcome = service.getWelcome();
+        return new ResponseEntity<String>(welcome, HttpStatus.OK);
     }
 
+    @PostMapping("/create")
+    public ResponseEntity<String> addDataToRepo(@Valid @RequestBody AddressBookDTO addressBookDto) {
+        AddressBook newAddressBook = service.postDataToRepo(addressBookDto);
+        ResponseDTO responseDTO = new ResponseDTO("Record Added Succesfully", newAddressBook);
+        return new ResponseEntity(responseDTO, HttpStatus.CREATED);
+    }
 
     @GetMapping("/get")
-    public ResponseEntity<String> getAllData() {
-        List<AddressBook> listOfContacts = service.getListOfAddresses();
-        ResponseDTO response = new ResponseDTO("Addresbook :", listOfContacts);
-        return new ResponseEntity(response, HttpStatus.OK);
+    public ResponseEntity<String> getAllDataFromRepo() {
+        List<AddressBook> listOfEmployee = service.getAllData();
+        ResponseDTO responseDTO = new ResponseDTO("Record Retrieved Successfully", listOfEmployee);
+        return new ResponseEntity(responseDTO, HttpStatus.OK);
     }
-
-
-    @PostMapping("/post")
-    public ResponseEntity<ResponseDTO> postData(@RequestBody AddressBookDTO addressBookDTO) {
-        AddressBook newContact = service.saveAddress(addressBookDTO);
-        ResponseDTO response = new ResponseDTO("New Contact Added in Addressbook : ", newContact);
-        return new ResponseEntity<ResponseDTO>(response, HttpStatus.OK);
-    }
-
 
     @GetMapping("/get/{id}")
-    public ResponseEntity<AddressBook> getAddressById(@PathVariable Integer id) {
-        ResponseDTO response = new ResponseDTO("Addressbook of given id: ", service.getAddressbyId(id));
-        return new ResponseEntity(response, HttpStatus.OK);
+    public ResponseEntity<String> getDataFromRepoById(@PathVariable Integer id) throws AddressBookException {
+        AddressBook existingEmployee = service.getDataById(id);
+        ResponseDTO responseDTO = new ResponseDTO("Record for given ID Retrieved Successfully", existingEmployee);
+        return new ResponseEntity(responseDTO, HttpStatus.OK);
     }
-
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<ResponseDTO> updateById(@PathVariable Integer id, @RequestBody AddressBookDTO addressBookDTO) {
-        AddressBook newContact = service.updateDateById(id, addressBookDTO);
-        ResponseDTO response = new ResponseDTO("Address-book updated : ", newContact);
-        return new ResponseEntity<ResponseDTO>(response, HttpStatus.OK);
+    public ResponseEntity<String> updateDataInRepo(@PathVariable Integer id,
+                                                   @Valid @RequestBody AddressBookDTO addressBookDTO)
+            throws AddressBookException {
+        AddressBook updatedEmployee = service.updateDataById(id, addressBookDTO);
+        ResponseDTO responseDTO = new ResponseDTO("Record for particular ID Updated Successfully", updatedEmployee);
+        return new ResponseEntity(responseDTO, HttpStatus.ACCEPTED);
     }
 
-
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<String> deleteDataById(@PathVariable Integer id) {
-        service.deleteContact(id);
-        return new ResponseEntity<String>("Contact deleted succesfully", HttpStatus.OK);
+    public ResponseEntity<String> deleteDataInRepo(@PathVariable Integer id) throws AddressBookException {
+        ResponseDTO responseDTO = new ResponseDTO
+                ("Record for particular ID Deleted Successfully", service.deleteDataById(id));
+        return new ResponseEntity(responseDTO, HttpStatus.ACCEPTED);
     }
 }
