@@ -1,6 +1,9 @@
 package com.example.demo.dto;
+
+
 import lombok.Data;
 
+//Created ResponseDTO class to get output in format of message with data
 @Data
 public class ResponseDTO {
     private String message;
